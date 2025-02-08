@@ -48,6 +48,15 @@
       "schedule": [
         "every weekend"
       ]
+    },
+    {
+      "matchDatasources": ["github-tags"],
+      "matchPackageNames": ["mariadb/server"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "MariaDB patch versions",
+      "schedule": [
+        "every weekend"
+      ]
     }
   ],
   "customManagers": [
@@ -62,6 +71,18 @@
       "datasourceTemplate": "docker",
       "depNameTemplate": "php",
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^docker/production/Dockerfile$"
+      ],
+      "matchStrings": [
+        "ARG MARIADB_VERSION=(?<currentValue>[0-9\\.]+)"
+      ],
+      "datasourceTemplate": "github-tags",
+      "depNameTemplate": "mariadb/server",
+      "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
     }
   ]
 }

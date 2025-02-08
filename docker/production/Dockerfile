@@ -1,6 +1,7 @@
 ## build context is at docker/
 
 ARG PHP_VERSION=8.2
+ARG MARIADB_VERSION=11.4.5  # Add MariaDB version as a build argument
 
 FROM ghcr.io/it-bens/shopware-remote-api-test-runner:base_$PHP_VERSION AS php_webserver_upstream
 FROM ghcr.io/it-bens/shopware-remote-api-test-runner:helper_satis_builder_$PHP_VERSION AS satis_upstream
@@ -64,6 +65,7 @@ RUN cd /opt/satis && \
 FROM php_webserver_upstream AS project_runner
 
 ARG PHP_VERSION=8.2
+ARG MARIADB_VERSION=11.4.5
 
 ARG SHOPWARE_VERSION="^6.5"
 ARG LOCALE="en-GB"
@@ -75,7 +77,7 @@ ENV APP_DEBUG="1"
 ENV APP_SECRET="!not-a-secret!"
 ENV APP_URL="$SHOPWARE_BASE_URL"
 ENV KERNEL_CLASS="Shopware\Core\Kernel"
-ENV DATABASE_URL="mysql://root:root@127.0.0.1:3306/shopware_test?serverVersion=mariadb-11.4.5"
+ENV DATABASE_URL="mysql://root:root@127.0.0.1:3306/shopware_test?serverVersion=mariadb-$MARIADB_VERSION"  # Use the build argument
 
 LABEL org.opencontainers.image.authors="Martin Bens <martin.bens@it-bens.de>" \
       org.opencontainers.image.title="Shopware Remote API Test Wrapper" \
@@ -87,7 +89,7 @@ LABEL org.opencontainers.image.authors="Martin Bens <martin.bens@it-bens.de>" \
       shopware.currency=$CURRENCY \
       shopware.base_url=$SHOPWARE_BASE_URL \
       php.version=$PHP_VERSION \
-      mariadb.version=11.4.5
+      mariadb.version=$MARIADB_VERSION
 
 # Set environment variables for Composer
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
@@ -101,7 +103,7 @@ RUN /bin/sh -c echo debconf mysql-server/root_password password root | debconf-s
     echo debconf mysql-server/root_password_again password root | debconf-set-selections && \
     export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && \
-    apt-get install -y -q mariadb-server=1:11.4.5+maria~deb12 mariadb-client=1:11.4.5+maria~deb12 && \
+    apt-get install -y -q mariadb-server=1:$MARIADB_VERSION+maria~deb12 mariadb-client=1:$MARIADB_VERSION+maria~deb12 && \
     usermod -d /var/lib/mysql/ mysql && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/* && \
     chmod 0444 /etc/mysql/my.cnf && \
